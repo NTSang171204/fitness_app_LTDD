@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:login/pages/onboard_screen.dart';
 import 'package:login/user_info.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -64,10 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Chuyển hướng sang trang User Info
       if (user != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => UserInfoScreen(user: user)),
-        );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => UserInfoScreen(user: user)),
+        // );
+        Navigator.push(context, MaterialPageRoute(builder: (context) => OnboardScreen()),);
       }
     } catch (e) {
       debugPrint("❌ Lỗi Google Sign-In: $e");
