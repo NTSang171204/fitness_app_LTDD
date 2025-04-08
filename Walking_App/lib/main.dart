@@ -51,13 +51,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:login/screens/history_screen.dart';
 import 'package:login/screens/login_screen.dart';
 import 'package:login/screens/onboard_screen.dart';
 import 'package:login/screens/register_screen.dart';
 import 'package:login/screens/step_tracker_screen.dart';
+import 'package:login/services/step_tracker_screen_service.dart';
+import 'package:provider/provider.dart'; // Import Provider
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,6 +66,7 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox<int>('steps');
   await Hive.openBox<int>('initSteps');
+  await Hive.openBox<double>('distance');
 
   runApp(MyApp());
 }
@@ -72,18 +74,21 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Auth',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      initialRoute: '/onboard',
-      routes: {
-        '/onboard': (context) => OnboardScreen(),
-        '/login': (context) => LoginScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/history': (context) => HistoryScreen(),
-        '/dailySteps': (context) => StepTrackerScreen(),
-      },
+    return ChangeNotifierProvider( // Cung cấp StepTrackerService
+      create: (context) => StepTrackerService(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Flutter Auth',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        initialRoute: '/onboard',
+        routes: {
+          '/onboard': (context) => OnboardScreen(),
+          '/login': (context) => LoginScreen(),
+          '/register': (context) => RegisterScreen(),
+          '/history': (context) => HistoryScreen(),
+          '/dailySteps': (context) => StepTrackerScreen(),
+        },
+      ),
     );
   }
 }
