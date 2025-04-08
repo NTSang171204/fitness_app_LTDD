@@ -1,9 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
         android:label="login"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"
+        android:foregroundServiceType="physicalActivity|location|dataSync">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -21,10 +25,21 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+              <!-- Dưới đây là phần xin background -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <receiver android:name="com.transistorsoft.flutter.backgroundfetch.HeadlessBroadcastReceiver">
+                <intent-filter>
+                    <action android:name="com.transistorsoft.flutter.backgroundfetch.ACTION_FETCH" />
+                </intent-filter>
+            </receiver>
+            <service
+        android:name="com.example.login.MyService"
+        android:foregroundServiceType="dataSync|location|physicalActivity"
+        android:exported="false" />
+            
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

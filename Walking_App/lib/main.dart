@@ -58,6 +58,8 @@ import 'package:login/screens/login_screen.dart';
 import 'package:login/screens/onboard_screen.dart';
 import 'package:login/screens/register_screen.dart';
 import 'package:login/screens/step_tracker_screen.dart';
+import 'package:background_fetch/background_fetch.dart';
+import 'package:login/services/background_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,8 +67,28 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox<int>('steps');
   await Hive.openBox<int>('initSteps');
+  await Hive.openBox<double>('distance');
 
+
+  BackgroundFetch.registerHeadlessTask(backgroundFetchHeadlessTask);
+  initializeService();
   runApp(MyApp());
+}
+
+void backgroundFetchHeadlessTask(HeadlessTask task) async {
+  String taskId = task.taskId;
+  bool isTimeout = task.timeout;
+
+  if (isTimeout) {
+    BackgroundFetch.finish(taskId);
+    return;
+  }
+
+  // Gọi logic đếm bước ở đây (hoặc sync lại Firestore)
+  // Có thể update Hive hoặc sync lại database
+  print("[BackgroundFetch] Headless event received.");
+
+  BackgroundFetch.finish(taskId);
 }
 
 class MyApp extends StatelessWidget {
