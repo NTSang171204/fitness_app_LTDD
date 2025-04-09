@@ -1,28 +1,20 @@
 // import 'package:hive/hive.dart';
-// import 'package:intl/intl.dart';
 
-// class StepStorageService {
-//   static final Box<int> _box = Hive.box<int>('steps');
+// class StepsStorageService {
+//   final Box<int> stepsBox = Hive.box<int>('steps');
+//   final Box<int> initialStepsBox = Hive.box<int>('initSteps');
+//   final Box<double> distanceBox = Hive.box<double>('distance');
 
-//   static String _getTodayKey() {
-//     return DateFormat('yyyy-MM-dd').format(DateTime.now());
+//   String todayKey() {
+//     final now = DateTime.now();
+//     return '${now.year}-${now.month}-${now.day}';
 //   }
 
-//   static int getTodaySteps() {
-//     return _box.get(_getTodayKey(), defaultValue: 0) ?? 0;
-//   }
+//   int getTodaySteps() => stepsBox.get(todayKey(), defaultValue: 0)!;
+//   int getInitialSteps() => initialStepsBox.get(todayKey(), defaultValue: 0)!;
+//   double getTodayDistance() => distanceBox.get(todayKey(), defaultValue: 0.0)!;
 
-//   static void saveTodaySteps(int steps) {
-//     _box.put(_getTodayKey(), steps);
-//   }
-
-//   static void resetIfNewDay() {
-//     final today = _getTodayKey();
-//     final keys = _box.keys.cast<String>();
-//     for (final key in keys) {
-//       if (key != today) {
-//         _box.delete(key); // Xoá ngày cũ (tuỳ bạn có thể giữ lại nếu cần history)
-//       }
-//     }
-//   }
+//   void saveTodaySteps(int steps) => stepsBox.put(todayKey(), steps);
+//   void saveInitialSteps(int steps) => initialStepsBox.put(todayKey(), steps);
+//   void saveDistance(double distance) => distanceBox.put(todayKey(), distance);
 // }

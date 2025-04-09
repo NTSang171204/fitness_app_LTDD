@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await Provider.of<AppState>(context, listen: false).setLoggedIn(true);
 
 
-      Navigator.pushReplacementNamed(context, '/history');
+      Navigator.pushReplacementNamed(context, '/dailySteps');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text("Login failed: $e"),
