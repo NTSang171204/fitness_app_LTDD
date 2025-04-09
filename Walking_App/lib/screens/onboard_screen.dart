@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:login/screens/login_screen.dart';
+import 'package:login/services/app_state.dart';
+import 'package:provider/provider.dart';
+
 
 class OnboardScreen extends StatelessWidget {
   @override
@@ -36,8 +39,12 @@ class OnboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              // ✅ Đánh dấu đã xem Onboard
+              await Provider.of<AppState>(context, listen: false).markOnboardSeen(true);
+
+              // ✅ Chuyển sang Login
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => LoginScreen()),
               );

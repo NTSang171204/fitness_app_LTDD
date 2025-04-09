@@ -57,6 +57,7 @@ import 'package:login/screens/login_screen.dart';
 import 'package:login/screens/onboard_screen.dart';
 import 'package:login/screens/register_screen.dart';
 import 'package:login/screens/step_tracker_screen.dart';
+import 'package:login/services/app_state.dart';
 import 'package:login/services/step_tracker_screen_service.dart';
 import 'package:provider/provider.dart'; // Import Provider
 
@@ -67,26 +68,50 @@ void main() async {
   await Hive.openBox<int>('steps');
   await Hive.openBox<int>('initSteps');
   await Hive.openBox<double>('distance');
+  await Hive.openBox('appState'); // mở box lưu trạng thái người dùng
 
-  runApp(MyApp());
+  final appState = AppState();
+  await appState.loadState();
+
+  runApp(ChangeNotifierProvider<AppState>.value(
+      value: appState,
+      child: MyApp(),
+    ),);
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider( // Cung cấp StepTrackerService
-      create: (context) => StepTrackerService(),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Flutter Auth',
-        theme: ThemeData(primarySwatch: Colors.blue),
-        initialRoute: '/onboard',
-        routes: {
-          '/onboard': (context) => OnboardScreen(),
-          '/login': (context) => LoginScreen(),
-          '/register': (context) => RegisterScreen(),
-          '/history': (context) => HistoryScreen(),
-          '/dailySteps': (context) => StepTrackerScreen(),
+    final appState = Provider.of<AppState>(context);
+
+    String initialRoute;
+    if (!appState.hasSeenOnboard) {
+      initialRoute = '/onboard';
+    } else if (!appState.isLoggedIn) {
+      initialRoute = '/login';
+    } else {
+      initialRoute = '/dailySteps';
+    }
+
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => StepTrackerService()),
+      ],
+      child: Consumer<AppState>(
+        builder: (context, appState, _) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Flutter Auth',
+            theme: ThemeData(primarySwatch: Colors.blue),
+            initialRoute: initialRoute,
+            routes: {
+              '/onboard': (context) => OnboardScreen(),
+              '/login': (context) => LoginScreen(),
+              '/register': (context) => RegisterScreen(),
+              '/history': (context) => HistoryScreen(),
+              '/dailySteps': (context) => StepTrackerScreen(),
+            },
+          );
         },
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:login/widgets/bottom_navigation_bar.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import '../services/step_tracker_screen_service.dart';
@@ -11,7 +12,7 @@ class StepTrackerScreen extends StatefulWidget {
 class _StepTrackerScreenState extends State<StepTrackerScreen> {
   late StepTrackerService stepService;
 
-  // ✅ Biến để hiển thị loading khi khởi tạo xong pedometer & Hive
+  // ✅ Biến để kiểm tra xem dữ liệu đã sẵn sàng để hiển thị chưa
   bool _isLoading = true;
 
   @override
@@ -21,21 +22,19 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
     // ✅ Lấy instance StepTrackerService từ Provider (listen: false để tránh rebuild không cần thiết)
     stepService = Provider.of<StepTrackerService>(context, listen: false);
 
-    // ✅ Gọi hàm khởi tạo service
+    // ✅ Gọi hàm khởi tạo service bao gồm Hive, Pedometer, Accel, v.v.
     initStepTracking();
   }
 
-  // ✅ Hàm async khởi tạo service
+  // ✅ Hàm async để khởi tạo và xử lý lỗi nếu có
   Future<void> initStepTracking() async {
     try {
-      await stepService.init(); // Khởi động Hive, Pedometer, v.v.
+      await stepService.init();
     } catch (e) {
-      // Nếu có lỗi, hiển thị thông báo
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi khi khởi động step tracker: $e')),
       );
     } finally {
-      // ✅ Sau khi init xong thì tắt loading
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -44,26 +43,21 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
     }
   }
 
-  // ❌ ĐÃ GỠ BỎ dispose() thủ công – Provider sẽ tự dispose StepTrackerService
-  // @override
-  // void dispose() {
-  //   stepService.dispose(); // ❌ Gây lỗi nếu Provider đã dispose rồi
-  //   super.dispose();
-  // }
-
   @override
   Widget build(BuildContext context) {
+    // ✅ Dùng Consumer để lắng nghe thay đổi từ StepTrackerService
     return Consumer<StepTrackerService>(
       builder: (context, stepService, _) {
-        // ✅ Loading UI khi đang khởi tạo
+        // ✅ Nếu đang loading (chưa init xong), hiển thị loading screen
         if (_isLoading) {
           return Scaffold(
             appBar: AppBar(title: Text("Daily Steps")),
             body: Center(child: CircularProgressIndicator()),
+            bottomNavigationBar: CustomBottomNav(currentIndex: 0), // ✅ Nav bar cho tab Home
           );
         }
 
-        // ✅ Tính phần trăm bước so với mục tiêu
+        // ✅ Tính phần trăm đạt được trong ngày
         double percent = (stepService.stepsToday / stepService.dailyGoal).clamp(0.0, 1.0);
 
         // ✅ Chuyển đổi khoảng cách từ cm sang m
@@ -75,6 +69,7 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // ✅ Hiển thị vòng tròn phần trăm với bước chân
                 CircularPercentIndicator(
                   radius: 150.0,
                   lineWidth: 12.0,
@@ -95,14 +90,19 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
                   circularStrokeCap: CircularStrokeCap.round,
                 ),
                 SizedBox(height: 20),
+
+                // ✅ Hiển thị quãng đường đã đi
                 Text('Distance: ${distanceInMeters.toStringAsFixed(2)} m',
                     style: TextStyle(fontSize: 20)),
                 SizedBox(height: 10),
+
+                // ✅ Hiển thị gia tốc trung bình (đã tính toán để lọc chuyển động không hợp lệ)
                 Text('Avg Accel: ${stepService.averageAcceleration.toStringAsFixed(2)}',
                     style: TextStyle(fontSize: 16, color: Colors.grey)),
               ],
             ),
           ),
+          bottomNavigationBar: CustomBottomNav(currentIndex: 0), // ✅ Nav bar cố định ở dưới cùng
         );
       },
     );
