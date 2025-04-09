@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:background_fetch/background_fetch.dart';
+// import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -43,7 +43,7 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
   void initState() {
     super.initState();
     _initPermissionsAndStart();
-    _initBackgroundFetch();
+    // _initBackgroundFetch();
   }
 
   Future<void> _initPermissionsAndStart() async {
@@ -66,40 +66,40 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
   }
 
 
-  void _initBackgroundFetch() async {
-  BackgroundFetch.configure(
-    BackgroundFetchConfig(
-      minimumFetchInterval: 15, // 15 phút (Android giới hạn thấp nhất)
-      stopOnTerminate: false,
-      enableHeadless: true,
-      startOnBoot: true,
-      requiresBatteryNotLow: false,
-      requiresCharging: false,
-      requiresStorageNotLow: false,
-      requiresDeviceIdle: false,
-      requiredNetworkType: NetworkType.NONE,
-    ),
-    (String taskId) async {
-      // ✅ Gọi lại lưu Hive và sync Firestore
-      print("[BackgroundFetch] Event received $taskId");
+//   void _initBackgroundFetch() async {
+//   BackgroundFetch.configure(
+//     BackgroundFetchConfig(
+//       minimumFetchInterval: 15, // 15 phút (Android giới hạn thấp nhất)
+//       stopOnTerminate: false,
+//       enableHeadless: true,
+//       startOnBoot: true,
+//       requiresBatteryNotLow: false,
+//       requiresCharging: false,
+//       requiresStorageNotLow: false,
+//       requiresDeviceIdle: false,
+//       requiredNetworkType: NetworkType.NONE,
+//     ),
+//     (String taskId) async {
+//       // ✅ Gọi lại lưu Hive và sync Firestore
+//       print("[BackgroundFetch] Event received $taskId");
 
-      // Lấy lại Hive box
-      final stepsBox = Hive.box<int>('steps');
-      final distanceBox = Hive.box<double>('distance');
-      final key = _todayKey;
-      final steps = stepsBox.get(key, defaultValue: 0)!;
-      final distance = distanceBox.get(key, defaultValue: 0.0)!;
+//       // Lấy lại Hive box
+//       final stepsBox = Hive.box<int>('steps');
+//       final distanceBox = Hive.box<double>('distance');
+//       final key = _todayKey;
+//       final steps = stepsBox.get(key, defaultValue: 0)!;
+//       final distance = distanceBox.get(key, defaultValue: 0.0)!;
 
-      _syncToFirestore(steps, distance / 100);
+//       _syncToFirestore(steps, distance / 100);
 
-      BackgroundFetch.finish(taskId);
-    },
-    (String taskId) async {
-      print("[BackgroundFetch] TIMEOUT: $taskId");
-      BackgroundFetch.finish(taskId);
-    },
-  );
-}
+//       BackgroundFetch.finish(taskId);
+//     },
+//     (String taskId) async {
+//       print("[BackgroundFetch] TIMEOUT: $taskId");
+//       BackgroundFetch.finish(taskId);
+//     },
+//   );
+// }
 
 
   void _loadTodaySteps() {
@@ -230,3 +230,69 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
     );
   }
 }
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:login/services/steps_counter_service.dart';
+// import 'package:percent_indicator/circular_percent_indicator.dart';
+
+// class StepTrackerScreen extends StatefulWidget {
+//   @override
+//   State<StepTrackerScreen> createState() => _StepTrackerScreenState();
+// }
+
+// class _StepTrackerScreenState extends State<StepTrackerScreen> {
+//   final _service = StepCounterService();
+//   final int _dailyGoal = 6000;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _service.init().then((_) {
+//       setState(() {});
+//       _service.start();
+//     });
+//   }
+
+//   @override
+//   void dispose() {
+//     _service.stop();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final percent = (_service.stepsToday / _dailyGoal).clamp(0.0, 1.0);
+//     return Scaffold(
+//       appBar: AppBar(title: Text("Daily Steps")),
+//       body: Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             CircularPercentIndicator(
+//               radius: 150,
+//               lineWidth: 12,
+//               animation: true,
+//               percent: percent,
+//               center: Column(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   Text('${_service.stepsToday}', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
+//                   Text("steps", style: TextStyle(fontSize: 18)),
+//                 ],
+//               ),
+//               progressColor: Colors.green,
+//               backgroundColor: Colors.grey[300]!,
+//               circularStrokeCap: CircularStrokeCap.round,
+//             ),
+//             SizedBox(height: 20),
+//             Text('Distance: ${_service.getDistanceInMeters().toStringAsFixed(2)} m', style: TextStyle(fontSize: 20)),
+//             SizedBox(height: 10),
+//             Text('Avg Accel: ${_service.avgAcceleration.toStringAsFixed(2)}', style: TextStyle(fontSize: 16, color: Colors.grey)),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
