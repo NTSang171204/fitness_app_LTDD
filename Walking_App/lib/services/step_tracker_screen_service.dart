@@ -18,9 +18,11 @@ class StepTrackerService with ChangeNotifier {
   late Box<int> _stepsBox;
   late Box<int> _initialStepsBox;
   late Box<double> _distanceBox;
+  late Box<double> _caloriesBox;
 
   double _stepLength = 60.0; // cm mỗi bước
   double _totalDistance = 0.0;
+  double _caloriesBurned = 0.0;
 
   double _movementThreshold = 1.5;
   double _avgAcceleration = 0.0;
@@ -28,15 +30,15 @@ class StepTrackerService with ChangeNotifier {
 
   bool _isInitialized = false;
 
-  Timer? _syncTimer; // ⏱️ Timer để sync Firestore mỗi 10 phút
-  DateTime? _lastSynced; // Lưu thời điểm sync gần nhất
+  Timer? _syncTimer;
+  DateTime? _lastSynced;
+  DateTime _lastAccelUpdate = DateTime.now();
 
   String get todayKey {
     final now = DateTime.now();
     return '${now.year}-${now.month}-${now.day}';
   }
 
-  // ✅ Gọi từ UI để khởi tạo service
   Future<void> init() async {
     if (_isInitialized) return;
     _isInitialized = true;
@@ -45,23 +47,24 @@ class StepTrackerService with ChangeNotifier {
       _stepsBox = Hive.box<int>('steps');
       _initialStepsBox = Hive.box<int>('initSteps');
       _distanceBox = Hive.box<double>('distance');
+      _caloriesBox = Hive.box<double>('calories'); // 🆕 Box cho calories
 
       final status = await Permission.activityRecognition.request();
       if (!status.isGranted) {
         throw Exception("Permission denied. Cannot track steps.");
       }
 
-      // ⬇️ Load dữ liệu cũ từ Hive
+      // 🔄 Load dữ liệu cũ từ Hive
       await Future.wait([
         _loadTodaySteps(),
         _loadInitialStepCount(),
         _loadTotalDistance(),
+        _loadCaloriesBurned(), // 🆕
       ]);
 
-      // 🚀 Bắt đầu theo dõi cảm biến
       _startAccelerometer();
       _startStepTracking();
-      _startFirestoreSyncTimer(); // ⏱️ Sync Firestore định kỳ
+      _startFirestoreSyncTimer();
 
     } catch (e) {
       print("❌ Error initializing StepTrackerService: $e");
@@ -81,10 +84,20 @@ class StepTrackerService with ChangeNotifier {
     _totalDistance = _distanceBox.get(todayKey, defaultValue: 0.0)!;
   }
 
+  Future<void> _loadCaloriesBurned() async {
+    _caloriesBurned = _caloriesBox.get(todayKey, defaultValue: 0.0)!;
+  }
+
   // 📱 Bắt đầu lắng nghe cảm biến gia tốc
   void _startAccelerometer() {
     _accelerometerStream = accelerometerEvents.listen((event) {
       try {
+        final now = DateTime.now();
+
+        // ⏱️ Giới hạn update mỗi 500ms
+        if (now.difference(_lastAccelUpdate).inMilliseconds < 500) return;
+        _lastAccelUpdate = now;
+
         double acc = sqrt(event.x * event.x + event.y * event.y + event.z * event.z) - 9.8;
         acc = acc.abs();
 
@@ -95,7 +108,7 @@ class StepTrackerService with ChangeNotifier {
 
         if ((newAvg - _avgAcceleration).abs() > 0.05) {
           _avgAcceleration = newAvg;
-          notifyListeners(); // chỉ notify nếu có thay đổi đáng kể
+          notifyListeners();
         }
       } catch (e) {
         print("❌ Accelerometer error: $e");
@@ -103,7 +116,6 @@ class StepTrackerService with ChangeNotifier {
     });
   }
 
-  // 👣 Bắt đầu đếm bước
   void _startStepTracking() {
     _stepCountStream = Pedometer.stepCountStream.listen(
       _onStepCount,
@@ -112,7 +124,6 @@ class StepTrackerService with ChangeNotifier {
     );
   }
 
-  // ✅ Gọi khi có thay đổi bước
   void _onStepCount(StepCount event) {
     try {
       if (_initialStepCount == 0) {
@@ -122,16 +133,17 @@ class StepTrackerService with ChangeNotifier {
 
       final todaySteps = event.steps - _initialStepCount;
 
-      // ⚠️ Chỉ tính bước nếu gia tốc đủ lớn
       if (todaySteps != _stepsToday &&
           todaySteps >= 0 &&
           _avgAcceleration > _movementThreshold) {
         _stepsToday = todaySteps;
         _totalDistance = _stepsToday * _stepLength;
+        _caloriesBurned = _stepsToday * 0.04; // 🔥 Tính calo cơ bản
 
         // 📦 Lưu vào Hive
         _stepsBox.put(todayKey, _stepsToday);
         _distanceBox.put(todayKey, _totalDistance);
+        _caloriesBox.put(todayKey, _caloriesBurned); // ✅ Lưu calo
 
         notifyListeners();
       }
@@ -144,10 +156,9 @@ class StepTrackerService with ChangeNotifier {
     print('❌ Pedometer error: $error');
   }
 
-  // ⏱️ Khởi động Timer sync Firestore mỗi 10 phút và sync ngay khi bắt đầu
   void _startFirestoreSyncTimer() {
     print("🔄 Sync Timer bắt đầu. Đang sync lần đầu...");
-    _syncToFirestore(force: true); // ✅ Sync ngay lần đầu khởi động
+    _syncToFirestore(force: true); // 🔁 Sync ngay khi khởi động
 
     _syncTimer = Timer.periodic(Duration(minutes: 10), (_) {
       print("🔁 Đã đến thời điểm sync định kỳ.");
@@ -155,7 +166,6 @@ class StepTrackerService with ChangeNotifier {
     });
   }
 
-  // ☁️ Hàm thực hiện sync dữ liệu lên Firestore
   Future<void> _syncToFirestore({bool force = false}) async {
     final now = DateTime.now();
 
@@ -181,18 +191,18 @@ class StepTrackerService with ChangeNotifier {
           .doc(todayKey)
           .set({
         'steps': _stepsToday,
-        'distance': _totalDistance / 100, // convert sang mét
+        'distance': _totalDistance / 100, // cm ➜ mét
+        'calories': _caloriesBurned,      // ✅ Gửi calories lên cloud
         'timestamp': now,
       });
 
       _lastSynced = now;
-      print("✅ Đã sync Firestore lúc $now. Steps: $_stepsToday, Distance: ${_totalDistance / 100} m");
+      print("✅ Đã sync Firestore lúc $now. Steps: $_stepsToday, Distance: ${_totalDistance / 100} m, Calories: $_caloriesBurned");
     } catch (e) {
       print("❌ Lỗi khi sync Firestore: $e");
     }
   }
 
-  // 🗑️ Hủy các stream và timer khi không cần thiết
   @override
   void dispose() {
     _stepCountStream.cancel();
@@ -201,8 +211,8 @@ class StepTrackerService with ChangeNotifier {
     super.dispose();
   }
 
-  // 🧾 Getter public
   int get stepsToday => _stepsToday;
   double get totalDistance => _totalDistance;
   double get averageAcceleration => _avgAcceleration;
+  double get caloriesBurned => _caloriesBurned; // 🔍 Public getter
 }

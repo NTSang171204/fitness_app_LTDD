@@ -68,6 +68,7 @@ void main() async {
   await Hive.openBox<int>('steps');
   await Hive.openBox<int>('initSteps');
   await Hive.openBox<double>('distance');
+  await Hive.openBox<double>('calories');
   await Hive.openBox('appState'); // mở box lưu trạng thái người dùng
 
   final appState = AppState();
