@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:login/services/app_state.dart';
+import 'package:provider/provider.dart';
 import '../widgets/social_login_buttons.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,6 +20,9 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
+      await Provider.of<AppState>(context, listen: false).setLoggedIn(true);
+
       Navigator.pushReplacementNamed(context, '/history');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
