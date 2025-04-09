@@ -16,12 +16,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _login() async {
     try {
-      await _auth.signInWithEmailAndPassword(
+      final userCredential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
+      final uid = userCredential.user?.uid;
+
+    
+      if (uid != null) {
+        // Lưu userId vào AppState
+        await Provider.of<AppState>(context, listen: false).setLoggedIn(true, uid);
+      } else {
+        throw Exception("User ID is null");
+      }
       await Provider.of<AppState>(context, listen: false).setLoggedIn(true);
+
 
       Navigator.pushReplacementNamed(context, '/history');
     } catch (e) {
