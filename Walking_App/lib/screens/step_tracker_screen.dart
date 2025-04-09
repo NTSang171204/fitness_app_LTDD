@@ -89,7 +89,7 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _infoCard(Icons.favorite, '${kcal.toStringAsFixed(0)} kcal', 'Calories', Colors.red),
+                    _infoCard(Icons.local_fire_department, '${kcal.toStringAsFixed(0)} kcal', 'Calories', Colors.red),
                     _infoCard(Icons.location_on, '${distanceInKm.toStringAsFixed(2)} km', 'Distance', Colors.purple),
                     _infoCard(Icons.speed, accel.toStringAsFixed(2), 'Acceleration', Colors.blue),
                   ],
