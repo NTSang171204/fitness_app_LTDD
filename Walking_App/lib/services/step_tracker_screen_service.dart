@@ -12,9 +12,11 @@ import 'package:sensors_plus/sensors_plus.dart';
 class StepTrackerService with ChangeNotifier {
   int _stepsToday = 0;
   int _initialStepCount = 0;
+  int todaySteps = 0;
   late StreamSubscription<StepCount> _stepCountStream;
   late StreamSubscription<AccelerometerEvent> _accelerometerStream;
-  bool _hasReachedGoatNotified = false; // 🆕 Biến để theo dõi thông báo đã gửi hay chưa
+  bool _hasReachedGoatNotified =
+      false; // 🆕 Biến để theo dõi thông báo đã gửi hay chưa
 
   final int dailyGoal = 6000;
   late Box<int> _stepsBox;
@@ -35,6 +37,7 @@ class StepTrackerService with ChangeNotifier {
   Timer? _syncTimer;
   DateTime? _lastSynced;
   DateTime _lastAccelUpdate = DateTime.now();
+  DateTime _lastNotified = DateTime.now();
 
   String get todayKey {
     final now = DateTime.now();
@@ -57,37 +60,75 @@ class StepTrackerService with ChangeNotifier {
       }
 
       // 🔄 Load dữ liệu cũ từ Hive
+      final firestoreData = await _getFirestoreData();
       await Future.wait([
-        _loadTodaySteps(),
-        _loadInitialStepCount(),
-        _loadTotalDistance(),
-        _loadCaloriesBurned(), // 🆕
+        _loadTodaySteps(firestoreData),
+        _loadInitialStepCount(firestoreData),
+        _loadTotalDistance(firestoreData),
+        _loadCaloriesBurned(firestoreData), // 🆕
       ]);
 
       _startAccelerometer();
       _startStepTracking();
       _startFirestoreSyncTimer();
-
     } catch (e) {
       print("❌ Error initializing StepTrackerService: $e");
       rethrow;
     }
   }
 
-  Future<void> _loadTodaySteps() async {
+
+  Future<void> _loadTodaySteps(Map<String, dynamic> firestoreData) async {
     _stepsToday = _stepsBox.get(todayKey, defaultValue: 0)!;
+    if (_stepsToday <= 0) {
+      _stepsToday = (firestoreData['steps'] as int?) ?? 0;
+      _stepsBox.put(todayKey, _stepsToday);
+    }
   }
 
-  Future<void> _loadInitialStepCount() async {
+  Future<void> _loadInitialStepCount(Map<String, dynamic> firestoreData) async {
     _initialStepCount = _initialStepsBox.get(todayKey, defaultValue: 0)!;
+    if (_initialStepCount <= 0) {
+      _initialStepCount = (firestoreData['initialSteps'] as int?) ?? 0;
+      _initialStepsBox.put(todayKey, _initialStepCount);
+    }
   }
 
-  Future<void> _loadTotalDistance() async {
+  Future<void> _loadTotalDistance(Map<String, dynamic> firestoreData) async {
     _totalDistance = _distanceBox.get(todayKey, defaultValue: 0.0)!;
+    if (_totalDistance <= 0) {
+      _totalDistance = (firestoreData['distance'] as double?) ?? 0.0;
+      _distanceBox.put(todayKey, _totalDistance);
+    }
   }
 
-  Future<void> _loadCaloriesBurned() async {
+  Future<void> _loadCaloriesBurned(Map<String, dynamic> firestoreData) async {
     _caloriesBurned = _caloriesBox.get(todayKey, defaultValue: 0.0)!;
+    if (_caloriesBurned <= 0) {
+      _caloriesBurned = (firestoreData['calories'] as double?) ?? 0.0;
+      _caloriesBox.put(todayKey, _caloriesBurned);
+    }
+  }
+
+
+  Future<Map<String, dynamic>> _getFirestoreData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return {};
+
+    final doc =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('steps')
+            .doc(todayKey)
+            .get();
+
+    if (doc.exists) {
+      final data = doc.data();
+      return (data ?? {});
+    }
+
+    return {};
   }
 
   // 📱 Bắt đầu lắng nghe cảm biến gia tốc
@@ -100,13 +141,17 @@ class StepTrackerService with ChangeNotifier {
         if (now.difference(_lastAccelUpdate).inMilliseconds < 500) return;
         _lastAccelUpdate = now;
 
-        double acc = sqrt(event.x * event.x + event.y * event.y + event.z * event.z) - 9.8;
+        double acc =
+            sqrt(event.x * event.x + event.y * event.y + event.z * event.z) -
+            9.8;
         acc = acc.abs();
 
         _accelHistory.add(acc);
         if (_accelHistory.length > 20) _accelHistory.removeAt(0);
 
-        double newAvg = _accelHistory.fold(0.0, (prev, x) => prev + x) / _accelHistory.length;
+        double newAvg =
+            _accelHistory.fold(0.0, (prev, x) => prev + x) /
+            _accelHistory.length;
 
         if ((newAvg - _avgAcceleration).abs() > 0.05) {
           _avgAcceleration = newAvg;
@@ -126,48 +171,57 @@ class StepTrackerService with ChangeNotifier {
     );
   }
 
-  void _onStepCount(StepCount event) {
-    try {
-      if (_initialStepCount == 0) {
-        _initialStepCount = event.steps;
-        _initialStepsBox.put(todayKey, _initialStepCount);
-      }
-
-      final todaySteps = event.steps - _initialStepCount;
-
-      if (todaySteps != _stepsToday &&
-          todaySteps >= 0 
-          &&_avgAcceleration > _movementThreshold          
-          ) {
-        _stepsToday = todaySteps;
-        _totalDistance = _stepsToday * _stepLength;
-        _caloriesBurned = _stepsToday * 0.04; // 🔥 Tính calo cơ bản
-
-        // 📦 Lưu vào Hive
-        _stepsBox.put(todayKey, _stepsToday);
-        _distanceBox.put(todayKey, _totalDistance);
-        _caloriesBox.put(todayKey, _caloriesBurned); // ✅ Lưu calo
-
-        print("Received step event: ${event.steps}");
-        print("Initial step count: $_initialStepCount");
-        print("Calculated todaySteps: $todaySteps");
-        print("Current _avgAcceleration: $_avgAcceleration");
-
-
-        // 🔔 Gửi thông báo
-        NotiService().showStepNotification(_stepsToday, dailyGoal);
-
-        if(_stepsToday >= dailyGoal && !_hasReachedGoatNotified) {
-          NotiService().showGoalReachedNotification(dailyGoal);
-          _hasReachedGoatNotified = true; // Đánh dấu là đã gửi thông báo
-        }
-
-        notifyListeners();
-      }
-    } catch (e) {
-      print("❌ Error in _onStepCount: $e");
+void _onStepCount(StepCount event) {
+  try {
+    if (_initialStepCount == 0) {
+      _initialStepCount = event.steps;
+      _initialStepsBox.put(todayKey, _initialStepCount);
     }
+
+
+    todaySteps = (event.steps - _initialStepCount);
+
+    // 🧠 Kiểm tra bước thay đổi đủ lớn và không âm
+    final hasNewStep = (todaySteps - _stepsToday).abs() >= 1;
+    final isValidStep = todaySteps >= 0;
+
+    // ⏱️ Kiểm tra thời gian giữa 2 lần notify để tránh spam UI
+    final shouldNotify = DateTime.now().difference(_lastNotified).inMilliseconds > 1000;
+
+    if (hasNewStep && isValidStep &&   _avgAcceleration > _movementThreshold) {
+      _stepsToday = todaySteps;
+      _totalDistance = _stepsToday * _stepLength;
+      _caloriesBurned = _stepsToday * 0.04;
+
+      // 📦 Lưu vào Hive
+      _stepsBox.put(todayKey, _stepsToday);
+      _distanceBox.put(todayKey, _totalDistance);
+      _caloriesBox.put(todayKey, _caloriesBurned);
+
+      print("✅ Received step event: ${event.steps}");
+      print("➡️ Initial: $_initialStepCount | Today steps: $todaySteps");
+      print("⚡ Avg Accel: $_avgAcceleration");
+
+      // 🔔 Gửi thông báo bước chân hiện tại
+      NotiService().showStepNotification(_stepsToday, dailyGoal);
+
+      // 🎯 Gửi thông báo hoàn thành mục tiêu
+      if (_stepsToday >= dailyGoal && !_hasReachedGoatNotified) {
+        NotiService().showGoalReachedNotification(dailyGoal);
+        _hasReachedGoatNotified = true;
+      }
+
+      // 📣 Cập nhật UI nếu đủ thời gian
+      if (shouldNotify) {
+        notifyListeners();
+        _lastNotified = DateTime.now();
+      }
+    }
+  } catch (e) {
+    print("❌ Error in _onStepCount: $e");
   }
+}
+
 
   void _onStepError(error) {
     print('❌ Pedometer error: $error');
@@ -207,14 +261,17 @@ class StepTrackerService with ChangeNotifier {
           .collection('steps')
           .doc(todayKey)
           .set({
-        'steps': _stepsToday,
-        'distance': _totalDistance / 100, // cm ➜ mét
-        'calories': _caloriesBurned,      // ✅ Gửi calories lên cloud
-        'timestamp': now,
-      });
+            'steps': _stepsToday,
+            'distance': _totalDistance / 100, // cm ➜ mét
+            'calories': _caloriesBurned, // ✅ Gửi calories lên cloud
+            'initialSteps': _initialStepCount,
+            'timestamp': now,
+          });
 
       _lastSynced = now;
-      print("✅ Đã sync Firestore lúc $now. Steps: $_stepsToday, Distance: ${_totalDistance / 100} m, Calories: $_caloriesBurned");
+      print(
+        "✅ Đã sync Firestore lúc $now. Steps: $_stepsToday, Distance: ${_totalDistance / 100} m, Calories: $_caloriesBurned",
+      );
     } catch (e) {
       print("❌ Lỗi khi sync Firestore: $e");
     }
