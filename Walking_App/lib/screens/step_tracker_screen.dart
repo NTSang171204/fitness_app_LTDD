@@ -81,7 +81,7 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
                       ),
                     ],
                   ),
-                  progressColor: Colors.green,
+                  progressColor: Colors.blue[300],
                   backgroundColor: Colors.grey.shade300,
                   circularStrokeCap: CircularStrokeCap.round,
                 ),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:login/services/flutter_notify_services.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,6 +14,7 @@ class StepTrackerService with ChangeNotifier {
   int _initialStepCount = 0;
   late StreamSubscription<StepCount> _stepCountStream;
   late StreamSubscription<AccelerometerEvent> _accelerometerStream;
+  bool _hasReachedGoatNotified = false; // 🆕 Biến để theo dõi thông báo đã gửi hay chưa
 
   final int dailyGoal = 6000;
   late Box<int> _stepsBox;
@@ -134,8 +136,9 @@ class StepTrackerService with ChangeNotifier {
       final todaySteps = event.steps - _initialStepCount;
 
       if (todaySteps != _stepsToday &&
-          todaySteps >= 0 &&
-          _avgAcceleration > _movementThreshold) {
+          todaySteps >= 0 
+          &&_avgAcceleration > _movementThreshold          
+          ) {
         _stepsToday = todaySteps;
         _totalDistance = _stepsToday * _stepLength;
         _caloriesBurned = _stepsToday * 0.04; // 🔥 Tính calo cơ bản
@@ -144,6 +147,20 @@ class StepTrackerService with ChangeNotifier {
         _stepsBox.put(todayKey, _stepsToday);
         _distanceBox.put(todayKey, _totalDistance);
         _caloriesBox.put(todayKey, _caloriesBurned); // ✅ Lưu calo
+
+        print("Received step event: ${event.steps}");
+        print("Initial step count: $_initialStepCount");
+        print("Calculated todaySteps: $todaySteps");
+        print("Current _avgAcceleration: $_avgAcceleration");
+
+
+        // 🔔 Gửi thông báo
+        NotiService().showStepNotification(_stepsToday, dailyGoal);
+
+        if(_stepsToday >= dailyGoal && !_hasReachedGoatNotified) {
+          NotiService().showGoalReachedNotification(dailyGoal);
+          _hasReachedGoatNotified = true; // Đánh dấu là đã gửi thông báo
+        }
 
         notifyListeners();
       }
