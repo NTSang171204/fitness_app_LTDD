@@ -54,7 +54,12 @@ class _StepTrackerScreenState extends State<StepTrackerScreen> {
         double accel = stepService.averageAcceleration;
 
         return Scaffold(
-          appBar: AppBar(title: Text("Daily Steps"), backgroundColor: Colors.blue),
+          appBar: AppBar(
+          title: Text("Daily Steps"),
+          backgroundColor: Colors.blue,
+          automaticallyImplyLeading: false, // <- Dòng này sẽ ẩn icon back
+        ),
+
           body: SafeArea(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
