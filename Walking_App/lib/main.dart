@@ -9,6 +9,7 @@ import 'package:login/screens/step_tracker_screen.dart';
 import 'package:login/services/app_state.dart';
 import 'package:login/services/flutter_notify_services.dart';
 import 'package:login/services/step_tracker_screen_service.dart';
+import 'package:login/screens/profile_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -98,6 +99,7 @@ class MyApp extends StatelessWidget {
               '/register': (context) => RegisterScreen(),
               '/history': (context) => HistoryScreen(),
               '/dailySteps': (context) => StepTrackerScreen(),
+              '/profile': (context) => ProfileScreen(),
             },
           );
         },
