@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotiService {
   NotiService._privateConstructor();
@@ -10,6 +11,8 @@ class NotiService {
 
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
+
+  static const String _notiKey = 'notifications'; // key dùng để lưu trạng thái
 
   Future<void> initNotification() async {
     if (_isInitialized) return;
@@ -24,7 +27,11 @@ class NotiService {
     _isInitialized = true;
   }
 
+  /// Kiểm tra nếu người dùng đã bật thông báo thì mới gửi
   Future<void> showStepNotification(int steps, int goal) async {
+    final isOn = await isNotificationEnabled();
+    if (!isOn) return;
+
     final details = const NotificationDetails(
       android: AndroidNotificationDetails(
         'Step_channel',
@@ -46,7 +53,10 @@ class NotiService {
     );
   }
 
-    Future<void> showGoalReachedNotification(int goal) async {
+  Future<void> showGoalReachedNotification(int goal) async {
+    final isOn = await isNotificationEnabled();
+    if (!isOn) return;
+
     final details = const NotificationDetails(
       android: AndroidNotificationDetails(
         'goal_channel_id',
@@ -62,13 +72,21 @@ class NotiService {
 
     await flutterLocalNotificationsPlugin.show(
       1,
-    '🎉 Đã đạt mục tiêu!',
-    'Bạn đã hoàn thành $goal bước hôm nay!',
+      '🎉 Đã đạt mục tiêu!',
+      'Bạn đã hoàn thành $goal bước hôm nay!',
       details,
     );
   }
 
+  /// Bật hoặc tắt thông báo
+  Future<void> setNotificationEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_notiKey, enabled);
+  }
 
-
-
+  /// Trả về trạng thái hiện tại của thông báo
+  Future<bool> isNotificationEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_notiKey) ?? true; // mặc định là bật
+  }
 }
