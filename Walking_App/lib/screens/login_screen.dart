@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:login/services/app_state.dart';
@@ -15,31 +16,35 @@ class _LoginScreenState extends State<LoginScreen> {
   final _auth = FirebaseAuth.instance;
 
   void _login() async {
-    try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+  try {
+    final userCredential = await _auth.signInWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
 
-      final uid = userCredential.user?.uid;
+    final uid = userCredential.user?.uid;
 
-    
-      if (uid != null) {
-        // Lưu userId vào AppState
-        await Provider.of<AppState>(context, listen: false).setLoggedIn(true, uid);
+    if (uid != null) {
+      await Provider.of<AppState>(context, listen: false).setLoggedIn(true, uid);
+
+      // 🔍 Kiểm tra user đã có thông tin chưa
+      final docSnapshot = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (docSnapshot.exists && docSnapshot.data()?['name'] != null) {
+        Navigator.pushReplacementNamed(context, '/dailySteps');
       } else {
-        throw Exception("User ID is null");
+        Navigator.pushReplacementNamed(context, '/userInfoForm');
       }
-      await Provider.of<AppState>(context, listen: false).setLoggedIn(true);
-
-
-      Navigator.pushReplacementNamed(context, '/dailySteps');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Login failed: $e"),
-      ));
+    } else {
+      throw Exception("User ID is null");
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text("Login failed: $e"),
+    ));
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
