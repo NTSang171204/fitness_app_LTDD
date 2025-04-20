@@ -91,9 +91,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
         };
       }
 
-      grouped[key]!['calories'] += entry['calories'];
-      grouped[key]!['distance'] += entry['distance'];
-      grouped[key]!['activeTime'] += entry['steps'];
+      grouped[key]!['calories'] += (entry['calories'] as num?)?.toDouble() ?? 0.0;
+      grouped[key]!['distance'] += (entry['distance'] as num?)?.toDouble() ?? 0.0;
+      grouped[key]!['activeTime'] += (entry['steps'] as num?)?.toDouble() ?? 0.0;
+
     }
 
     final sortedKeys = grouped.keys.toList()..sort();
