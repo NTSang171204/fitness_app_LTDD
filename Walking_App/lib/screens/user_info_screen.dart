@@ -106,7 +106,7 @@ class _UserInfoFormScreenState extends State<UserInfoFormScreen> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _submit,
-                child: Text('Lưu'),
+                child: Text('Lưu', style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 14),
                   backgroundColor: Colors.blue,
