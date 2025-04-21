@@ -29,13 +29,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    await _fetchUserInfo();
-    await _loadLocalAvatar();
-    await _loadNotificationStatus();
+    _fetchUserInfo();
+    _loadLocalAvatar();
+    _loadNotificationStatus();
   }
 
   Future<void> _fetchUserInfo() async {
@@ -51,7 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
-
+  // Lưu và tải thông tin Avatar 
   Future<void> _loadLocalAvatar() async {
     final prefs = await SharedPreferences.getInstance();
     final path = prefs.getString('localAvatarPath');
@@ -88,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
-
+  //Quản lý thông báo (Notification):
   Future<void> _loadNotificationStatus() async {
     final enabled = await NotiService().isNotificationEnabled();
     setState(() {
@@ -102,13 +98,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       isNotificationOn = value;
     });
   }
-
+  //Chuyển đổi chủ đề 
   Widget _buildThemeTile(ThemeProvider themeProvider) {
     final isDarkMode = themeProvider.isDarkMode;
 
     return ListTile(
-      leading: const Icon(Icons.palette),
-      title: const Text("Theme"),
+      leading: Icon(Icons.palette),
+      title: Text("Theme"),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -130,44 +126,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildCard(List<Widget> children) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(children: children),
-    );
-  }
-
-  Widget _buildListTile(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: onTap,
-    );
-  }
-
-  Widget _buildListTileWithTrailing(
-    IconData icon,
-    String title,
-    String trailingText,
-    VoidCallback onTap,
-  ) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(trailingText, style: const TextStyle(color: Colors.blue)),
-          const SizedBox(width: 8),
-          const Icon(Icons.arrow_forward_ios, size: 16),
-        ],
-      ),
-      onTap: onTap,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -178,17 +136,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         actions: [
+          
           IconButton(
             icon: Icon(Icons.logout, color: Theme.of(context).iconTheme.color),
             onPressed: () async {
               final shouldLogout = await showDialog<bool>(
                 context: context,
                 builder: (_) => AlertDialog(
-                  title: const Text('Đăng xuất'),
-                  content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+                  title: Text('Đăng xuất'),
+                  content: Text('Bạn có chắc chắn muốn đăng xuất?'),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy')),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Đăng xuất')),
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Hủy')),
+                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Đăng xuất')),
                   ],
                 ),
               );
@@ -215,16 +174,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         backgroundImage: localAvatarPath != null
                             ? FileImage(File(localAvatarPath!))
                             : null,
-                        child: localAvatarPath == null ? const Icon(Icons.person, size: 50) : null,
+                        child: localAvatarPath == null ? Icon(Icons.person, size: 50) : null,
                       ),
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
                           onTap: _pickAndSaveLocalAvatar,
-                          child: const CircleAvatar(
+                          child: CircleAvatar(
                             radius: 16,
-                            backgroundColor: Color.fromARGB(255, 168, 232, 91),
+                            backgroundColor: const Color.fromARGB(255, 168, 232, 91),
                             child: Icon(Icons.edit, size: 18),
                           ),
                         ),
@@ -234,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 12),
                   Text(
                     name,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text("$email | $phone"),
@@ -253,8 +212,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.pushNamed(context, '/userInfoForm');
                     }),
                     ListTile(
-                      leading: const Icon(Icons.notifications),
-                      title: const Text("Notifications"),
+                      leading: Icon(Icons.notifications),
+                      title: Text("Notifications"),
                       trailing: Switch(
                         value: isNotificationOn,
                         onChanged: _toggleNotification,
@@ -271,11 +230,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildThemeTile(themeProvider),
                   ]),
                   _buildCard([
-                    _buildListTile(Icons.help, "Help & Support", () {}),
-                    _buildListTile(Icons.mail, "Contact us", () {}),
-                    _buildListTile(Icons.privacy_tip, "Privacy policy", () {
-                      Navigator.pushNamed(context, '/policy');
-                    }),
+                  _buildListTile(Icons.help, "Help & Support", () {}),
+                  _buildListTile(Icons.mail, "Contact us", () {}),
+                  _buildListTile(Icons.privacy_tip, "Privacy policy", () {
+                  Navigator.pushNamed(context, '/policy');
+                   }),
                   ]),
+
                   const SizedBox(height: 32),
-      
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+       bottomNavigationBar: CustomBottomNav(currentIndex: 2),
+    );
+  }
+
+   Widget _buildCard(List<Widget> children) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(children: children),
+    );
+  }
+
+   Widget _buildListTile(IconData icon, String title, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
+    );
+  }
+
+   Widget _buildListTileWithTrailing(
+    IconData icon,
+    String title,
+    String trailingText,
+    VoidCallback onTap,
+  ) {
+     return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(trailingText, style: const TextStyle(color: Colors.blue)),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward_ios, size: 16),
+        ],
+      ),
+      onTap: onTap,
+    );
+  }
+}
