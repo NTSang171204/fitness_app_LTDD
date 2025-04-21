@@ -136,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         actions: [
-          //Xử lý Đăng xuất 
+          
           IconButton(
             icon: Icon(Icons.logout, color: Theme.of(context).iconTheme.color),
             onPressed: () async {
@@ -244,11 +244,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNav(currentIndex: 2),
+       bottomNavigationBar: CustomBottomNav(currentIndex: 2),
     );
   }
 
-  Widget _buildCard(List<Widget> children) {
+   Widget _buildCard(List<Widget> children) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -256,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildListTile(IconData icon, String title, VoidCallback onTap) {
+   Widget _buildListTile(IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon),
       title: Text(title),
@@ -265,13 +265,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildListTileWithTrailing(
+   Widget _buildListTileWithTrailing(
     IconData icon,
     String title,
     String trailingText,
     VoidCallback onTap,
   ) {
-    return ListTile(
+     return ListTile(
       leading: Icon(icon),
       title: Text(title),
       trailing: Row(
