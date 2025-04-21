@@ -15,6 +15,7 @@ import 'package:login/services/flutter_notify_services.dart';
 import 'package:login/services/step_tracker_screen_service.dart';
 import 'package:login/theme/custom_theme.dart';
 import 'package:provider/provider.dart';
+import 'screens/policy_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,6 +78,7 @@ class MyApp extends StatelessWidget {
               '/profile': (context) => ProfileScreen(),
               '/userInfoForm': (context) => UserInfoFormScreen(),
               '/decide': (context) => DecideScreen(),
+              '/policy': (context) => const PolicyScreen(),
             },
           );
         },

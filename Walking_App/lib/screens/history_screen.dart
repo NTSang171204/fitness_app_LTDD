@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

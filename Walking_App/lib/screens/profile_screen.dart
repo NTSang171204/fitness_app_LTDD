@@ -229,10 +229,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildThemeTile(themeProvider),
                   ]),
                   _buildCard([
-                    _buildListTile(Icons.help, "Help & Support", () {}),
-                    _buildListTile(Icons.mail, "Contact us", () {}),
-                    _buildListTile(Icons.privacy_tip, "Privacy policy", () {}),
+                  _buildListTile(Icons.help, "Help & Support", () {}),
+                  _buildListTile(Icons.mail, "Contact us", () {}),
+                  _buildListTile(Icons.privacy_tip, "Privacy policy", () {
+                  Navigator.pushNamed(context, '/policy');
+                   }),
                   ]),
+
                   const SizedBox(height: 32),
                 ],
               ),
