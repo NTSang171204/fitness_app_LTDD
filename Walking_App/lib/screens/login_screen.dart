@@ -9,14 +9,14 @@ class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
-
+//
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _auth = FirebaseAuth.instance;
-
-  void _login() async {
-  try {
+   final _emailController = TextEditingController();
+   final _passwordController = TextEditingController();
+   final _auth = FirebaseAuth.instance;
+    //
+   void _login() async {
+   try {
     final userCredential = await _auth.signInWithEmailAndPassword(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-
+ //
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,9 +57,36 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Text('Log in', textAlign: TextAlign.center, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
             SizedBox(height: 20),
-            TextField(controller: _emailController, decoration: InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
+           TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(), // default border
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue, width: 2.0), // khi focus
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey, width: 1.5), // khi không focus
+                ),
+              ),
+            ),
+
             SizedBox(height: 10),
-            TextField(controller: _passwordController, obscureText: true, decoration: InputDecoration(labelText: 'Password', border: OutlineInputBorder())),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey, width: 1.5),
+                ),
+              ),
+            ),
+
             SizedBox(height: 20),
             SocialLoginButtons(),
             SizedBox(height: 20),

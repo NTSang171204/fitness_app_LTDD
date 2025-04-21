@@ -45,11 +45,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
             Text('Register', textAlign: TextAlign.center, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
             SizedBox(height: 20),
-            TextField(controller: _emailController, decoration: InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
+            TextField(
+              controller: _emailController, 
+              decoration: InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(), // default border
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue, width: 2.0), // khi focus
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey, width: 1.5), // khi không focus
+                ),
+              )),
             SizedBox(height: 10),
-            TextField(controller: _passwordController, obscureText: true, decoration: InputDecoration(labelText: 'Password', border: OutlineInputBorder())),
+            TextField(
+              controller: _passwordController, 
+              obscureText: true, 
+              decoration: InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey, width: 1.5),
+                ),
+              )),
             SizedBox(height: 10),
-            TextField(controller: _confirmController, obscureText: true, decoration: InputDecoration(labelText: 'Confirm Password', border: OutlineInputBorder())),
+            TextField(
+              controller: _confirmController, 
+              obscureText: true, 
+              decoration: InputDecoration(
+                labelText: 'Confirm Password',
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey, width: 1.5),
+                ),
+              )),
             SizedBox(height: 20),
             SocialLoginButtons(),
             SizedBox(height: 20),
