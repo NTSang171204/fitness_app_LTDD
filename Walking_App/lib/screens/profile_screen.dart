@@ -47,7 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
-
+  // Lưu và tải thông tin Avatar 
   Future<void> _loadLocalAvatar() async {
     final prefs = await SharedPreferences.getInstance();
     final path = prefs.getString('localAvatarPath');
@@ -84,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
-
+  //Quản lý thông báo (Notification):
   Future<void> _loadNotificationStatus() async {
     final enabled = await NotiService().isNotificationEnabled();
     setState(() {
@@ -98,7 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       isNotificationOn = value;
     });
   }
-
+  //Chuyển đổi chủ đề 
   Widget _buildThemeTile(ThemeProvider themeProvider) {
     final isDarkMode = themeProvider.isDarkMode;
 
@@ -136,6 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         actions: [
+          //Xử lý Đăng xuất 
           IconButton(
             icon: Icon(Icons.logout, color: Theme.of(context).iconTheme.color),
             onPressed: () async {
