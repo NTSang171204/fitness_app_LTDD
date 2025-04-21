@@ -15,14 +15,18 @@ class PolicyScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
+              
               Text(
                 '1. Thu thập thông tin',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
+              
               SizedBox(height: 8),
+              
               Text(
                 'Ứng dụng có thể thu thập một số thông tin cơ bản như dữ liệu hoạt động đi bộ, vị trí và các cài đặt người dùng nhằm nâng cao trải nghiệm.',
               ),
+              
               SizedBox(height: 16),
               Text(
                 '2. Sử dụng thông tin',
